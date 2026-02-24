@@ -5,6 +5,7 @@ import { useTaxonomyStore } from '../../stores/useTaxonomyStore';
 import { useToast } from '../../hooks/useToast';
 import { RecipeForm } from './RecipeForm';
 import { ConfirmModal } from '../shared/ConfirmModal';
+import { FormModal } from '../shared/FormModal';
 import { EmptyState } from '../shared/EmptyState';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 import { MarginBadge } from '../shared/MarginBadge';
@@ -54,12 +55,17 @@ export function RecipeList() {
         </div>
       </div>
 
-      {editing !== null && (
+      <FormModal
+        open={editing !== null}
+        title={editing === 'new' ? 'Nouvelle recette' : 'Modifier la recette'}
+        onClose={() => setEditing(null)}
+        wide
+      >
         <RecipeForm
           recipe={editing === 'new' ? null : editing}
           onClose={() => setEditing(null)}
         />
-      )}
+      </FormModal>
 
       {!recipes.length ? (
         <EmptyState

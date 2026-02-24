@@ -3,6 +3,7 @@ import { useSupplierStore } from '../../stores/useSupplierStore';
 import { useToast } from '../../hooks/useToast';
 import { SupplierForm } from './SupplierForm';
 import { ConfirmModal } from '../shared/ConfirmModal';
+import { FormModal } from '../shared/FormModal';
 import { CsvImportModal } from '../shared/CsvImportModal';
 import { EmptyState } from '../shared/EmptyState';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
@@ -60,12 +61,16 @@ export function SupplierList() {
         </div>
       </div>
 
-      {editing !== null && (
+      <FormModal
+        open={editing !== null}
+        title={editing === 'new' ? 'Nouveau fournisseur' : 'Modifier le fournisseur'}
+        onClose={() => setEditing(null)}
+      >
         <SupplierForm
           supplier={editing === 'new' ? null : editing}
           onClose={() => setEditing(null)}
         />
-      )}
+      </FormModal>
 
       {!suppliers.length ? (
         <EmptyState

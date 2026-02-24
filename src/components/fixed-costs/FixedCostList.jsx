@@ -3,6 +3,7 @@ import { useFixedCostStore } from '../../stores/useFixedCostStore';
 import { useToast } from '../../hooks/useToast';
 import { FixedCostForm } from './FixedCostForm';
 import { ConfirmModal } from '../shared/ConfirmModal';
+import { FormModal } from '../shared/FormModal';
 import { EmptyState } from '../shared/EmptyState';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 
@@ -45,12 +46,16 @@ export function FixedCostList() {
         </button>
       </div>
 
-      {editing !== null && (
+      <FormModal
+        open={editing !== null}
+        title={editing === 'new' ? 'Nouveau coût fixe' : 'Modifier le coût fixe'}
+        onClose={() => setEditing(null)}
+      >
         <FixedCostForm
           fixedCost={editing === 'new' ? null : editing}
           onClose={() => setEditing(null)}
         />
-      )}
+      </FormModal>
 
       {!fixedCosts.length ? (
         <EmptyState

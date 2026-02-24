@@ -6,6 +6,7 @@ import { useToast } from '../../hooks/useToast';
 import { IngredientForm } from './IngredientForm';
 import { IngredientBadge } from './IngredientBadge';
 import { ConfirmModal } from '../shared/ConfirmModal';
+import { FormModal } from '../shared/FormModal';
 import { CsvImportModal } from '../shared/CsvImportModal';
 import { EmptyState } from '../shared/EmptyState';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
@@ -141,12 +142,17 @@ export function IngredientList() {
         </div>
       </div>
 
-      {editing !== null && (
+      <FormModal
+        open={editing !== null}
+        title={editing === 'new' ? 'Nouvel ingrédient' : "Modifier l'ingrédient"}
+        onClose={() => setEditing(null)}
+        wide
+      >
         <IngredientForm
           ingredient={editing === 'new' ? null : editing}
           onClose={() => setEditing(null)}
         />
-      )}
+      </FormModal>
 
       {!filtered.length ? (
         <EmptyState
