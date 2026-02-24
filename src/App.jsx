@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
+import AccessGate from './components/auth/AccessGate';
 import ConfigPage from './pages/ConfigPage';
 import SuppliersPage from './pages/SuppliersPage';
 import IngredientsPage from './pages/IngredientsPage';
@@ -12,6 +14,14 @@ import DashboardPage from './pages/DashboardPage';
 import PdfImportPage from './pages/PdfImportPage';
 
 function App() {
+  const [accessGranted, setAccessGranted] = useState(
+    () => localStorage.getItem('access_granted') === 'true'
+  );
+
+  if (!accessGranted) {
+    return <AccessGate onGranted={() => setAccessGranted(true)} />;
+  }
+
   return (
     <BrowserRouter>
       <AppLayout>
