@@ -67,8 +67,7 @@ export function VolunteerShifts() {
           />
           <div className="alert alert-info text-sm mt-2">
             <div>
-              <div>Heures totales : <strong>{entitlements.totalHours}</strong></div>
-              <div>Repas dus : <strong>{entitlements.meals}</strong> | Boissons dues : <strong>{entitlements.drinks}</strong></div>
+              <div>Boissons dues (1/shift) : <strong>{entitlements.drinks}</strong> | Repas dus (2+ shifts) : <strong>{entitlements.meals}</strong></div>
             </div>
           </div>
         </div>

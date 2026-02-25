@@ -92,10 +92,10 @@ export function calcUnsoldCost(recipe, recipeIngredients, ingredientMap, planned
 }
 
 // Droits et couts benevoles
+// Regles: 1 boisson minerale par shift, 1 repas pour benevoles 2+ shifts
 export function calcVolunteerEntitlements(shifts, eventConfig, avgMealCost, avgDrinkCost) {
   const {
     shift_duration_hours: shiftH,
-    service_interval_hours: serviceH,
   } = eventConfig;
   const {
     volunteers_1_shift: n1,
@@ -107,8 +107,10 @@ export function calcVolunteerEntitlements(shifts, eventConfig, avgMealCost, avgD
   const totalHours = (n1 * shiftH) + (n2 * shiftH * 2) + (n3 * shiftH * 3);
   const variationFactor = 1 + (variPct / 100);
 
-  const mealsRaw = Math.floor(totalHours / shiftH);
-  const drinksRaw = Math.floor(totalHours / serviceH);
+  // 1 boisson par shift par personne
+  const drinksRaw = (n1 * 1) + (n2 * 2) + (n3 * 3);
+  // 1 repas pour les benevoles qui font 2 ou 3 shifts
+  const mealsRaw = n2 + n3;
 
   const meals = Math.round(mealsRaw * variationFactor);
   const drinks = Math.round(drinksRaw * variationFactor);

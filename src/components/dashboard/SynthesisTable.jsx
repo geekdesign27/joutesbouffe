@@ -166,34 +166,25 @@ function VolunteerDetail({ scenarios }) {
   const o = get(scenarios.optimistic);
   if (!r) return null;
 
-  const hoursFormula = (v) => {
-    if (!v) return '0 h';
-    return `${fmtN(v.n1)}×1 + ${fmtN(v.n2)}×2 + ${fmtN(v.n3)}×3 = ${fmtN(v.totalHours)} h`;
+  const drinkFormula = (v) => {
+    if (!v) return fmt(0);
+    return `(${fmtN(v.n1)}×1 + ${fmtN(v.n2)}×2 + ${fmtN(v.n3)}×3) = ${fmtN(v.drinks)} × ${fmt(v.avgDrinkCost)} = ${fmt(v.drinks * v.avgDrinkCost)}`;
   };
 
   const mealFormula = (v) => {
     if (!v) return fmt(0);
-    return `${fmtN(v.meals)} × ${fmt(v.avgMealCost)} = ${fmt(v.meals * v.avgMealCost)}`;
-  };
-
-  const drinkFormula = (v) => {
-    if (!v) return fmt(0);
-    return `${fmtN(v.drinks)} × ${fmt(v.avgDrinkCost)} = ${fmt(v.drinks * v.avgDrinkCost)}`;
+    return `(${fmtN(v.n2)} + ${fmtN(v.n3)}) = ${fmtN(v.meals)} × ${fmt(v.avgMealCost)} = ${fmt(v.meals * v.avgMealCost)}`;
   };
 
   return (
     <>
       <FormulaRow
-        label="Heures bénévoles (n×shifts)"
-        pFormula={hoursFormula(p)} rFormula={hoursFormula(r)} oFormula={hoursFormula(o)}
-      />
-      <FormulaRow
-        label="Repas dus (nb × coût moyen)"
-        pFormula={mealFormula(p)} rFormula={mealFormula(r)} oFormula={mealFormula(o)}
-      />
-      <FormulaRow
-        label="Boissons dues (nb × coût moyen)"
+        label="Boissons (1/shift/pers.)"
         pFormula={drinkFormula(p)} rFormula={drinkFormula(r)} oFormula={drinkFormula(o)}
+      />
+      <FormulaRow
+        label="Repas (1/pers. si 2+ shifts)"
+        pFormula={mealFormula(p)} rFormula={mealFormula(r)} oFormula={mealFormula(o)}
       />
     </>
   );
