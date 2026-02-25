@@ -125,11 +125,14 @@ export function calcVolunteerEntitlements(shifts, eventConfig, avgMealCost, avgD
 export function calcMixedProfileImpact(
   profile,
   rights,
-  payingConsumption,
+  consumptionRates,
   headcount,
   recipePriceMap,
-  recipeProductionCostMap
+  recipeProductionCostMap,
+  variationPct = 0
 ) {
+  const variationFactor = 1 + (variationPct / 100);
+
   // Charges : ce que l'organisation offre
   const offeredCharges = rights.reduce((total, right) => {
     const costPerUnit = recipeProductionCostMap[right.recipe_category] ?? 0;
@@ -137,9 +140,9 @@ export function calcMixedProfileImpact(
   }, 0);
 
   // Recettes : ce que ce profil paie en supplement
-  const payingRevenues = payingConsumption.reduce((total, pc) => {
-    const price = recipePriceMap[pc.recipe_category] ?? 0;
-    return total + (headcount * pc.rate_per_person * price);
+  const payingRevenues = consumptionRates.reduce((total, cr) => {
+    const price = recipePriceMap[cr.recipe_category] ?? 0;
+    return total + (headcount * cr.rate_per_person * variationFactor * price);
   }, 0);
 
   return {

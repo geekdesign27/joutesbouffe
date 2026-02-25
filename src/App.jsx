@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
+import { ErrorBoundary } from './components/shared/ErrorBoundary';
 import AccessGate from './components/auth/AccessGate';
 import ConfigPage from './pages/ConfigPage';
 import SuppliersPage from './pages/SuppliersPage';
@@ -9,7 +10,7 @@ import RecipesPage from './pages/RecipesPage';
 import ProfilesPage from './pages/ProfilesPage';
 import FixedCostsPage from './pages/FixedCostsPage';
 import TaxonomiesPage from './pages/TaxonomiesPage';
-import ProjectionsPage from './pages/ProjectionsPage';
+
 import DashboardPage from './pages/DashboardPage';
 import PdfImportPage from './pages/PdfImportPage';
 
@@ -24,6 +25,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ErrorBoundary>
       <AppLayout>
         <Routes>
           <Route path="/" element={<DashboardPage />} />
@@ -35,10 +37,11 @@ function App() {
           <Route path="/profils" element={<ProfilesPage />} />
           <Route path="/couts-fixes" element={<FixedCostsPage />} />
           <Route path="/taxonomies" element={<TaxonomiesPage />} />
-          <Route path="/projections" element={<ProjectionsPage />} />
+          <Route path="/projections" element={<Navigate to="/profils" replace />} />
           <Route path="/import-pdf" element={<PdfImportPage />} />
         </Routes>
       </AppLayout>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

@@ -6,9 +6,9 @@ export function CostPieChart({ result }) {
   if (!result) return <p className="text-sm text-base-content/50">Aucune donnée</p>;
 
   const data = [
-    { name: 'Offerts pompiers', value: result.chargesOffertsPompiers || 0 },
-    { name: 'Offerts arbitres', value: result.chargesOffertsArbitres || 0 },
     { name: 'Offerts bénévoles', value: result.chargesOffertsBenevoles || 0 },
+    { name: 'Boissons offertes (éq.)', value: result.chargesCotisationsDrinks || 0 },
+    { name: 'Repas offerts (éq.)', value: result.chargesCotisationsMeals || 0 },
     { name: 'Production (vendus)', value: result.productionCostsSold || 0 },
     { name: 'Coûts fixes', value: result.fixedCosts || 0 },
     { name: 'Invendus', value: result.unsoldCosts || 0 },

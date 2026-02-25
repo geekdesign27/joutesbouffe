@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useProfileStore } from '../../stores/useProfileStore';
 import { useToast } from '../../hooks/useToast';
-import { ProfileRights } from './ProfileRights';
-import { MixedConsumption } from './MixedConsumption';
+import { ProfileConsumptionRates } from './ProfileConsumptionRates';
 import { VolunteerShifts } from './VolunteerShifts';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 
@@ -51,11 +50,11 @@ export function ProfileList() {
 
               {expanded === profile.id && (
                 <div className="mt-4 space-y-4">
-                  {(profile.type === 'mixed' || profile.type === 'offered' || profile.type === 'shift_based') && (
-                    <ProfileRights profileId={profile.id} />
-                  )}
-                  {profile.has_paying_consumption && (
-                    <MixedConsumption profileId={profile.id} />
+                  {profile.type !== 'shift_based' && (
+                    <ProfileConsumptionRates
+                      profileId={profile.id}
+                      showRates={profile.type === 'paying' || profile.has_paying_consumption}
+                    />
                   )}
                   {profile.type === 'shift_based' && (
                     <VolunteerShifts />

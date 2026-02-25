@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Store, Carrot, UtensilsCrossed,
-  Wallet, TrendingUp, LayoutDashboard,
+  Wallet, LayoutDashboard,
   Settings, Users, Tag, FileText,
   ChevronDown,
 } from 'lucide-react';
@@ -21,8 +21,8 @@ const NAV_GROUPS = [
     label: 'Budget',
     defaultOpen: true,
     items: [
+      { to: '/profils', label: 'Profils & Projections', icon: Users },
       { to: '/couts-fixes', label: 'Coûts fixes', icon: Wallet },
-      { to: '/projections', label: 'Projections', icon: TrendingUp },
       { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
     ],
   },
@@ -31,7 +31,6 @@ const NAV_GROUPS = [
     defaultOpen: false,
     items: [
       { to: '/config', label: 'Configuration', icon: Settings },
-      { to: '/profils', label: 'Profils', icon: Users },
       { to: '/taxonomies', label: 'Taxonomies', icon: Tag },
       { to: '/import-pdf', label: 'Import PDF', icon: FileText },
     ],

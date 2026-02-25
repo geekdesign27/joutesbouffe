@@ -1,17 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useConfigStore } from '../../stores/useConfigStore';
+import { useTeamCategoryStore } from '../../stores/useTeamCategoryStore';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useToast } from '../../hooks/useToast';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
 import { FormField } from '../ui/FormField';
 import { Input } from '../ui/Input';
+import { ReadonlyField } from '../ui/ReadonlyField';
 
 export function EventConfig() {
   const { config, loading, fetchConfig, updateConfig } = useConfigStore();
+  const { teamCategories, fetchAll: fetchTeamCategories } = useTeamCategoryStore();
   const toast = useToast();
   const [form, setForm] = useState(null);
 
   useEffect(() => { fetchConfig(); }, [fetchConfig]);
+  useEffect(() => { fetchTeamCategories(); }, [fetchTeamCategories]);
   useEffect(() => { if (config) setForm({ ...config }); }, [config]);
 
   const debouncedForm = useDebounce(form, 500);
@@ -24,14 +28,22 @@ export function EventConfig() {
       .catch((err) => toast.error(err.message));
   }, [debouncedForm]);
 
+  const teamSummary = useMemo(() => {
+    const totalTeams = teamCategories.reduce((sum, tc) => sum + (tc.num_teams || 0), 0);
+    const totalPlayers = teamCategories.reduce((sum, tc) => sum + (tc.num_teams || 0) * (tc.players_per_team || 0), 0);
+    const detail = teamCategories
+      .filter((tc) => tc.num_teams > 0)
+      .map((tc) => `${tc.num_teams} ${tc.name}`)
+      .join(' + ');
+    return { totalTeams, totalPlayers, detail };
+  }, [teamCategories]);
+
   if (loading || !form) return <LoadingSpinner />;
 
   const handleChange = (field) => (e) => {
     const value = e.target.type === 'number' ? Number(e.target.value) : e.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
   };
-
-  const totalPlayers = (form.total_teams || 0) * (form.players_per_team || 0);
 
   return (
     <div className="card bg-base-100 shadow-sm">
@@ -56,12 +68,8 @@ export function EventConfig() {
           <FormField label="Intervalle service boissons (heures)">
             <Input type="number" value={form.service_interval_hours || ''} onChange={handleChange('service_interval_hours')} min="1" />
           </FormField>
-          <FormField label="Nombre d'équipes">
-            <Input type="number" value={form.total_teams || ''} onChange={handleChange('total_teams')} min="0" />
-          </FormField>
-          <FormField label="Joueurs par équipe">
-            <Input type="number" value={form.players_per_team || ''} onChange={handleChange('players_per_team')} min="0" />
-          </FormField>
+          <ReadonlyField label="Nombre d'équipes" value={teamSummary.totalTeams} />
+          <ReadonlyField label="Total joueurs" value={teamSummary.totalPlayers} />
           <FormField label="Nombre d'arbitres">
             <Input type="number" value={form.total_referees || ''} onChange={handleChange('total_referees')} min="0" />
           </FormField>
@@ -70,7 +78,9 @@ export function EventConfig() {
           </FormField>
         </div>
         <div className="alert alert-info mt-4">
-          <span>Total joueurs (pompiers) : <strong>{totalPlayers}</strong> ({form.total_teams} équipes × {form.players_per_team} joueurs)</span>
+          <span>
+            {teamSummary.totalTeams} équipes ({teamSummary.detail || 'aucune'}) — {teamSummary.totalPlayers} joueurs
+          </span>
         </div>
       </div>
     </div>

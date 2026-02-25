@@ -114,16 +114,16 @@ export function TeamCotisations() {
             <div key={form.id} className="border border-base-300 rounded-lg p-4">
               <h3 className="font-semibold text-lg mb-3">{form.name}</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <FormField label="Nb d'équipes">
+                <FormField label="Nb d'équipes" hint="Nombre total d'équipes inscrites dans cette catégorie">
                   <Input type="number" value={form.num_teams || ''} onChange={handleChange(index, 'num_teams')} min="0" />
                 </FormField>
-                <FormField label="Joueurs / équipe">
+                <FormField label="Joueurs / équipe" hint="Nombre de joueurs par équipe (utilisé pour calculer les cotisations et les repas)">
                   <Input type="number" value={form.players_per_team || ''} onChange={handleChange(index, 'players_per_team')} min="0" />
                 </FormField>
-                <FormField label="Cotisation / joueur (CHF)">
+                <FormField label="Cotisation / joueur (CHF)" hint="Montant payé par chaque joueur à l'inscription">
                   <Input type="number" value={form.fee_per_player || ''} onChange={handleChange(index, 'fee_per_player')} min="0" step="0.5" />
                 </FormField>
-                <FormField label="Boisson offerte">
+                <FormField label="Boisson offerte" hint="Recette offerte à chaque équipe (ex: mètre de bière). Comptée par équipe, pas par joueur.">
                   <Select
                     options={recipeOptions}
                     placeholder="— Aucune —"
@@ -131,10 +131,10 @@ export function TeamCotisations() {
                     onChange={handleSelect(index, 'drink_recipe_id')}
                   />
                 </FormField>
-                <FormField label="Qté boisson / équipe">
+                <FormField label="Qté boisson / équipe" hint="Nombre de portions de la boisson offerte par équipe (ex: 1 mètre par équipe)">
                   <Input type="number" value={form.drink_qty_per_team || ''} onChange={handleChange(index, 'drink_qty_per_team')} min="0" step="0.5" />
                 </FormField>
-                <FormField label="Repas offert">
+                <FormField label="Repas offert" hint="Recette de repas offerte à chaque joueur individuellement. Comptée par joueur.">
                   <Select
                     options={recipeOptions}
                     placeholder="— Aucun —"

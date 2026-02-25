@@ -4,14 +4,13 @@ import { supabase } from '../lib/supabase';
 const useProfileStore = create((set, get) => ({
   profiles: [],
   rights: [],
-  payingConsumption: [],
   loading: false,
   error: null,
 
   fetchAll: async () => {
     set({ loading: true, error: null });
     try {
-      const [profilesRes, rightsRes, payingRes] = await Promise.all([
+      const [profilesRes, rightsRes] = await Promise.all([
         supabase
           .from('profiles')
           .select('*')
@@ -19,19 +18,14 @@ const useProfileStore = create((set, get) => ({
         supabase
           .from('profile_rights')
           .select('*'),
-        supabase
-          .from('profile_paying_consumption')
-          .select('*'),
       ]);
 
       if (profilesRes.error) throw profilesRes.error;
       if (rightsRes.error) throw rightsRes.error;
-      if (payingRes.error) throw payingRes.error;
 
       set({
         profiles: profilesRes.data,
         rights: rightsRes.data,
-        payingConsumption: payingRes.data,
         loading: false,
       });
     } catch (err) {
@@ -141,21 +135,6 @@ const useProfileStore = create((set, get) => ({
     }
   },
 
-  upsertPayingConsumption: async (data) => {
-    set({ loading: true, error: null });
-    try {
-      const { error } = await supabase
-        .from('profile_paying_consumption')
-        .upsert(data);
-
-      if (error) throw error;
-
-      await get().fetchAll();
-    } catch (err) {
-      set({ error: err.message, loading: false });
-      throw err;
-    }
-  },
 }));
 
 export { useProfileStore };
