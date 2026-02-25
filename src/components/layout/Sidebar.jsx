@@ -9,6 +9,13 @@ import {
 
 const NAV_GROUPS = [
   {
+    label: 'Synthèse',
+    defaultOpen: true,
+    items: [
+      { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+    ],
+  },
+  {
     label: 'Données',
     defaultOpen: true,
     items: [
@@ -23,7 +30,6 @@ const NAV_GROUPS = [
     items: [
       { to: '/profils', label: 'Profils & Projections', icon: Users },
       { to: '/couts-fixes', label: 'Coûts fixes', icon: Wallet },
-      { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
     ],
   },
   {
