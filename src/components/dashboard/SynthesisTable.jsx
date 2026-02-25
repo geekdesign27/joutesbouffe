@@ -196,7 +196,7 @@ function ProductionCostDetail({ scenarios, categoryLabels }) {
     }, 0);
   };
 
-  // Sum qty (headcount × rate × factor) per category across all profiles
+  // Sum qty per category across all profiles for a given scenario
   const catQty = (d, cat) => {
     if (!d?.perProfile) return 0;
     return d.perProfile.reduce((s, prof) => {
@@ -206,25 +206,36 @@ function ProductionCostDetail({ scenarios, categoryLabels }) {
     }, 0);
   };
 
+  // Unit cost for a category (same across scenarios, based on recipe ingredients)
+  const catUnitCost = (d, cat) => {
+    if (!d?.perProfile) return 0;
+    for (const prof of d.perProfile) {
+      const c = prof.categories?.find((x) => x.category === cat);
+      if (c?.unitCost) return c.unitCost;
+    }
+    return 0;
+  };
+
+  const formula = (d, cat) => {
+    const qty = catQty(d, cat);
+    const unit = catUnitCost(d, cat);
+    const total = catCost(d, cat);
+    if (!qty) return fmt(0);
+    return `${fmtN(qty, 1)} × ${fmt(unit)} = ${fmt(total)}`;
+  };
+
   return (
     <>
-      <SubRow
-        label="Chiffre d'affaires total (ventes)"
-        pVal={p?.totalSoldRevenue} rVal={r.totalSoldRevenue} oVal={o?.totalSoldRevenue}
-      />
-      {[...allCats].map((cat) => {
-        const rQty = catQty(r, cat);
-        const rCost = r.perProfile?.[0]?.categories?.find((c) => c.category === cat)?.unitCost || 0;
-        return (
-          <SubRow
-            key={cat}
-            label={`${categoryLabels[cat] || cat} (${fmtN(rQty, 1)} portions × ${fmt(rCost)}/u)`}
-            pVal={catCost(p, cat)}
-            rVal={catCost(r, cat)}
-            oVal={catCost(o, cat)}
-          />
-        );
-      })}
+      {[...allCats].map((cat) => (
+        <tr key={cat} className="bg-base-200/30">
+          <td className="text-xs pl-12 py-1 text-base-content/70">
+            {categoryLabels[cat] || cat} (portions × coût/u)
+          </td>
+          <td className="text-right font-mono text-xs py-1 text-base-content/70">{formula(p, cat)}</td>
+          <td className="text-right font-mono text-xs py-1 text-base-content/70">{formula(r, cat)}</td>
+          <td className="text-right font-mono text-xs py-1 text-base-content/70">{formula(o, cat)}</td>
+        </tr>
+      ))}
     </>
   );
 }
