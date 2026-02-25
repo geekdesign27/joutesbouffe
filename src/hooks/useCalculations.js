@@ -5,12 +5,14 @@ import { useProfileStore } from '../stores/useProfileStore';
 import { useProjectionStore } from '../stores/useProjectionStore';
 import { useFixedCostStore } from '../stores/useFixedCostStore';
 import { useConfigStore } from '../stores/useConfigStore';
+import { useTeamCategoryStore } from '../stores/useTeamCategoryStore';
 import {
   calcProductionCost,
   calcMargin,
   calcUnsoldCost,
   calcVolunteerEntitlements,
   calcMixedProfileImpact,
+  calcCotisationResult,
   calcNetResult,
 } from '../lib/calculations';
 
@@ -25,6 +27,7 @@ export function useCalculations(scenario = 'realistic') {
   const consumptionRates = useProjectionStore((s) => s.consumptionRates);
   const fixedCosts = useFixedCostStore((s) => s.fixedCosts);
   const config = useConfigStore((s) => s.config);
+  const teamCategories = useTeamCategoryStore((s) => s.teamCategories);
 
   return useMemo(() => {
     if (!config || !recipes.length) {
@@ -126,14 +129,21 @@ export function useCalculations(scenario = 'realistic') {
       return total + calcUnsoldCost(recipe, ri, ingredientMap, plannedQty);
     }, 0);
 
+    // Cotisations equipes
+    const recipeCostMap = {};
+    recipeDetails.forEach((r) => { recipeCostMap[r.id] = r.productionCost; });
+    const cotisationResult = calcCotisationResult(teamCategories, recipeCostMap);
+
     // Resultat net
     const scenarioResult = calcNetResult({
       revenuesVisitors,
       revenuesPompiers: pompierImpact.payingRevenues,
       revenuesArbitres: arbitreImpact.payingRevenues,
+      revenuesCotisations: cotisationResult.totalRevenue,
       chargesOffertsPompiers: pompierImpact.offeredCharges,
       chargesOffertsArbitres: arbitreImpact.offeredCharges,
       chargesOffertsBenevoles: volunteerResult.totalCost,
+      chargesCotisationsOffertes: cotisationResult.totalOfferedCost,
       productionCostsSold,
       fixedCosts: totalFixedCosts,
       unsoldCosts,
@@ -165,18 +175,22 @@ export function useCalculations(scenario = 'realistic') {
         revenuesVisitors,
         revenuesPompiers: pompierImpact.payingRevenues,
         revenuesArbitres: arbitreImpact.payingRevenues,
+        revenuesCotisations: cotisationResult.totalRevenue,
         chargesOffertsPompiers: pompierImpact.offeredCharges,
         chargesOffertsArbitres: arbitreImpact.offeredCharges,
         chargesOffertsBenevoles: volunteerResult.totalCost,
+        chargesCotisationsDrinks: cotisationResult.totalDrinkCost,
+        chargesCotisationsMeals: cotisationResult.totalMealCost,
         productionCostsSold,
         fixedCosts: totalFixedCosts,
         unsoldCosts,
       },
+      cotisationResult,
       totalFixedCosts,
       alerts,
       volunteerResult,
       recipePriceMap,
       recipeProductionCostMap,
     };
-  }, [recipes, ingredients, profiles, rights, payingConsumption, headcounts, volunteerShifts, consumptionRates, fixedCosts, config, scenario]);
+  }, [recipes, ingredients, profiles, rights, payingConsumption, headcounts, volunteerShifts, consumptionRates, fixedCosts, config, teamCategories, scenario]);
 }

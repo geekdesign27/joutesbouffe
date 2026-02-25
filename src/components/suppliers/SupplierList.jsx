@@ -7,6 +7,7 @@ import { FormModal } from '../shared/FormModal';
 import { CsvImportModal } from '../shared/CsvImportModal';
 import { EmptyState } from '../shared/EmptyState';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
+import { DataTable } from '../shared/DataTable';
 
 const SUPPLIER_CSV_COLUMNS = ['nom', 'contact', 'notes'];
 
@@ -14,6 +15,13 @@ function validateSupplierRow(row) {
   if (!row.nom?.trim()) return 'Nom obligatoire';
   return null;
 }
+
+const COLUMNS = [
+  { key: 'name', header: 'Nom', sortable: true, searchable: true },
+  { key: 'contact', header: 'Contact', sortable: true, searchable: true },
+  { key: 'notes', header: 'Notes', searchable: true },
+  { key: 'actions', header: 'Actions', className: 'w-32' },
+];
 
 export function SupplierList() {
   const { suppliers, loading, fetchAll, remove, bulkCreate } = useSupplierStore();
@@ -72,42 +80,31 @@ export function SupplierList() {
         />
       </FormModal>
 
-      {!suppliers.length ? (
-        <EmptyState
-          title="Aucun fournisseur"
-          description="Ajoutez vos fournisseurs pour commencer."
-          actionLabel="Ajouter un fournisseur"
-          onAction={() => setEditing('new')}
-        />
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="table table-zebra">
-            <thead>
-              <tr>
-                <th>Nom</th>
-                <th>Contact</th>
-                <th>Notes</th>
-                <th className="w-32">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {suppliers.map((s) => (
-                <tr key={s.id}>
-                  <td className="font-medium">{s.name}</td>
-                  <td>{s.contact || '—'}</td>
-                  <td className="text-sm text-base-content/60">{s.notes || '—'}</td>
-                  <td>
-                    <div className="flex gap-1">
-                      <button className="btn btn-ghost btn-xs" onClick={() => setEditing(s)}>Modifier</button>
-                      <button className="btn btn-ghost btn-xs text-error" onClick={() => setDeleting(s)}>Supprimer</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        data={suppliers}
+        columns={COLUMNS}
+        emptyState={
+          <EmptyState
+            title="Aucun fournisseur"
+            description="Ajoutez vos fournisseurs pour commencer."
+            actionLabel="Ajouter un fournisseur"
+            onAction={() => setEditing('new')}
+          />
+        }
+        renderCell={(s) => (
+          <tr key={s.id}>
+            <td className="font-medium">{s.name}</td>
+            <td>{s.contact || '—'}</td>
+            <td className="text-sm text-base-content/60">{s.notes || '—'}</td>
+            <td>
+              <div className="flex gap-1">
+                <button className="btn btn-ghost btn-xs" onClick={() => setEditing(s)}>Modifier</button>
+                <button className="btn btn-ghost btn-xs text-error" onClick={() => setDeleting(s)}>Supprimer</button>
+              </div>
+            </td>
+          </tr>
+        )}
+      />
 
       <ConfirmModal
         open={!!deleting}

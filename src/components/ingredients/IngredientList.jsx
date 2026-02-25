@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useIngredientStore } from '../../stores/useIngredientStore';
 import { useSupplierStore } from '../../stores/useSupplierStore';
 import { useTaxonomyStore } from '../../stores/useTaxonomyStore';
@@ -10,6 +10,7 @@ import { FormModal } from '../shared/FormModal';
 import { CsvImportModal } from '../shared/CsvImportModal';
 import { EmptyState } from '../shared/EmptyState';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
+import { DataTable } from '../shared/DataTable';
 import { calcServingUnitPrice } from '../../lib/calculations';
 
 const INGREDIENT_CSV_COLUMNS = [
@@ -17,6 +18,18 @@ const INGREDIENT_CSV_COLUMNS = [
   'prix_achat', 'nb_unites_par_cond', 'contenance_unite', 'mesure_contenance',
   'contenance', 'unite_contenance', 'taux_perte',
   'retournable', 'perissable', 'notes',
+];
+
+const COLUMNS = [
+  { key: 'name', header: 'Nom', sortable: true, searchable: true },
+  { key: 'supplier', header: 'Fournisseur', sortable: true, searchable: true },
+  { key: 'purchase', header: 'Achat' },
+  { key: 'purchase_price', header: 'Prix achat', sortable: true, className: 'text-right' },
+  { key: 'content', header: 'Contenu' },
+  { key: 'serving', header: 'Service' },
+  { key: 'serving_price', header: 'Prix/service', sortable: true, className: 'text-right' },
+  { key: 'status', header: 'Statut' },
+  { key: 'actions', header: 'Actions', className: 'w-32' },
 ];
 
 export function IngredientList() {
@@ -43,6 +56,14 @@ export function IngredientList() {
   const filtered = filterCategory
     ? ingredients.filter((i) => i.category === filterCategory)
     : ingredients;
+
+  const getSearchValue = useCallback((item, key) => {
+    if (key === 'supplier') return item.supplier?.name || '';
+    if (key === 'name') return item.name || '';
+    if (key === 'purchase_price') return String(item.purchase_price || 0);
+    if (key === 'serving_price') return String(calcServingUnitPrice(item));
+    return item[key] == null ? '' : String(item[key]);
+  }, []);
 
   const handleDelete = async () => {
     if (!deleting) return;
@@ -154,57 +175,43 @@ export function IngredientList() {
         />
       </FormModal>
 
-      {!filtered.length ? (
-        <EmptyState
-          title="Aucun ingrédient"
-          description="Ajoutez vos ingrédients pour composer les recettes."
-          actionLabel="Ajouter un ingrédient"
-          onAction={() => setEditing('new')}
-        />
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="table table-zebra table-sm">
-            <thead>
-              <tr>
-                <th>Nom</th>
-                <th>Fournisseur</th>
-                <th>Achat</th>
-                <th className="text-right">Prix achat</th>
-                <th>Contenu</th>
-                <th>Service</th>
-                <th className="text-right">Prix/service</th>
-                <th>Statut</th>
-                <th className="w-32">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((ing) => {
-                const sPrice = calcServingUnitPrice(ing);
-                const sUnit = ing.serving_unit || ing.purchase_unit;
-                const itemsPer = ing.items_per_purchase || 1;
-                return (
-                <tr key={ing.id}>
-                  <td className="font-medium">{ing.name}</td>
-                  <td>{ing.supplier?.name || '—'}</td>
-                  <td className="text-sm">{ing.purchase_quantity} {ing.purchase_unit}</td>
-                  <td className="text-right font-mono">{Number(ing.purchase_price).toFixed(2)} CHF</td>
-                  <td className="text-sm">{itemsPer > 1 ? `${itemsPer} u.` : '—'}{ing.item_volume ? ` × ${ing.item_volume} ${ing.item_volume_unit}` : ''}</td>
-                  <td className="text-sm">{ing.serving_unit ? `${ing.serving_quantity} ${ing.serving_unit}/u.` : '—'}</td>
-                  <td className="text-right font-mono font-semibold">{sPrice.toFixed(4)} CHF/{sUnit}</td>
-                  <td><IngredientBadge ingredient={ing} /></td>
-                  <td>
-                    <div className="flex gap-1">
-                      <button className="btn btn-ghost btn-xs" onClick={() => setEditing(ing)}>Modifier</button>
-                      <button className="btn btn-ghost btn-xs text-error" onClick={() => setDeleting(ing)}>Supprimer</button>
-                    </div>
-                  </td>
-                </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        data={filtered}
+        columns={COLUMNS}
+        tableSizeClass="table-sm"
+        getSearchValue={getSearchValue}
+        emptyState={
+          <EmptyState
+            title="Aucun ingrédient"
+            description="Ajoutez vos ingrédients pour composer les recettes."
+            actionLabel="Ajouter un ingrédient"
+            onAction={() => setEditing('new')}
+          />
+        }
+        renderCell={(ing) => {
+          const sPrice = calcServingUnitPrice(ing);
+          const sUnit = ing.serving_unit || ing.purchase_unit;
+          const itemsPer = ing.items_per_purchase || 1;
+          return (
+            <tr key={ing.id}>
+              <td className="font-medium">{ing.name}</td>
+              <td>{ing.supplier?.name || '—'}</td>
+              <td className="text-sm">{ing.purchase_quantity} {ing.purchase_unit}</td>
+              <td className="text-right font-mono">{Number(ing.purchase_price).toFixed(2)} CHF</td>
+              <td className="text-sm">{itemsPer > 1 ? `${itemsPer} u.` : '—'}{ing.item_volume ? ` × ${ing.item_volume} ${ing.item_volume_unit}` : ''}</td>
+              <td className="text-sm">{ing.serving_unit ? `${ing.serving_quantity} ${ing.serving_unit}/u.` : '—'}</td>
+              <td className="text-right font-mono font-semibold">{sPrice.toFixed(4)} CHF/{sUnit}</td>
+              <td><IngredientBadge ingredient={ing} /></td>
+              <td>
+                <div className="flex gap-1">
+                  <button className="btn btn-ghost btn-xs" onClick={() => setEditing(ing)}>Modifier</button>
+                  <button className="btn btn-ghost btn-xs text-error" onClick={() => setDeleting(ing)}>Supprimer</button>
+                </div>
+              </td>
+            </tr>
+          );
+        }}
+      />
 
       <ConfirmModal
         open={!!deleting}

@@ -149,23 +149,54 @@ export function calcMixedProfileImpact(
   };
 }
 
+// Calcul des cotisations equipes
+export function calcCotisationResult(teamCategories, recipeCostMap) {
+  let totalPlayers = 0;
+  let totalRevenue = 0;
+  let totalDrinkCost = 0;
+  let totalMealCost = 0;
+
+  teamCategories.forEach((cat) => {
+    const players = (cat.num_teams || 0) * (cat.players_per_team || 0);
+    totalPlayers += players;
+    totalRevenue += players * (cat.fee_per_player || 0);
+    if (cat.drink_recipe_id && recipeCostMap[cat.drink_recipe_id] != null) {
+      totalDrinkCost += (cat.num_teams || 0) * (cat.drink_qty_per_team || 0) * recipeCostMap[cat.drink_recipe_id];
+    }
+    if (cat.meal_recipe_id && recipeCostMap[cat.meal_recipe_id] != null) {
+      totalMealCost += players * (cat.meals_per_player || 0) * recipeCostMap[cat.meal_recipe_id];
+    }
+  });
+
+  return {
+    totalPlayers,
+    totalRevenue,
+    totalDrinkCost,
+    totalMealCost,
+    totalOfferedCost: totalDrinkCost + totalMealCost,
+    netBenefit: totalRevenue - totalDrinkCost - totalMealCost,
+  };
+}
+
 // Resultat net global pour un scenario
 export function calcNetResult({
   revenuesVisitors,
   revenuesPompiers,
   revenuesArbitres,
+  revenuesCotisations = 0,
   chargesOffertsPompiers,
   chargesOffertsArbitres,
   chargesOffertsBenevoles,
+  chargesCotisationsOffertes = 0,
   productionCostsSold,
   fixedCosts,
   unsoldCosts,
 }) {
   const totalRevenues =
-    revenuesVisitors + revenuesPompiers + revenuesArbitres;
+    revenuesVisitors + revenuesPompiers + revenuesArbitres + revenuesCotisations;
 
   const totalOfferedCharges =
-    chargesOffertsPompiers + chargesOffertsArbitres + chargesOffertsBenevoles;
+    chargesOffertsPompiers + chargesOffertsArbitres + chargesOffertsBenevoles + chargesCotisationsOffertes;
 
   const totalCharges =
     productionCostsSold + fixedCosts + totalOfferedCharges + unsoldCosts;

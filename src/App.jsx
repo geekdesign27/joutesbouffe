@@ -26,7 +26,8 @@ function App() {
     <BrowserRouter>
       <AppLayout>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="/config" element={<ConfigPage />} />
           <Route path="/fournisseurs" element={<SuppliersPage />} />
           <Route path="/ingredients" element={<IngredientsPage />} />
@@ -36,7 +37,6 @@ function App() {
           <Route path="/taxonomies" element={<TaxonomiesPage />} />
           <Route path="/projections" element={<ProjectionsPage />} />
           <Route path="/import-pdf" element={<PdfImportPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
         </Routes>
       </AppLayout>
     </BrowserRouter>

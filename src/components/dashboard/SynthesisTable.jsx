@@ -40,12 +40,15 @@ export function SynthesisTable({ scenarios }) {
               {row('Ventes visiteurs publics', (s) => s.scenarioResult?.revenuesVisitors)}
               {row('Ventes pompiers (part payante)', (s) => s.scenarioResult?.revenuesPompiers)}
               {row('Ventes arbitres (part payante)', (s) => s.scenarioResult?.revenuesArbitres)}
+              {row('Cotisations équipes', (s) => s.scenarioResult?.revenuesCotisations)}
               {row('TOTAL RECETTES', (s) => s.scenarioResult?.totalRevenues, true)}
 
               <tr><td colSpan="4" className="font-bold text-primary pt-4">CHARGES</td></tr>
               {row('Charges offertes pompiers', (s) => s.scenarioResult?.chargesOffertsPompiers)}
               {row('Charges offertes arbitres', (s) => s.scenarioResult?.chargesOffertsArbitres)}
               {row('Charges offertes bénévoles', (s) => s.scenarioResult?.chargesOffertsBenevoles)}
+              {row('Boissons offertes (équipes)', (s) => s.scenarioResult?.chargesCotisationsDrinks)}
+              {row('Repas offerts (équipes)', (s) => s.scenarioResult?.chargesCotisationsMeals)}
               {row('Coûts de production (vendus)', (s) => s.scenarioResult?.productionCostsSold)}
               {row('Coûts fixes', (s) => s.scenarioResult?.fixedCosts)}
               {row('Coûts invendus non récupérables', (s) => s.scenarioResult?.unsoldCosts)}

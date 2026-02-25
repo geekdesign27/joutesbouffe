@@ -4,8 +4,16 @@ import { useToast } from '../../hooks/useToast';
 import { ConfirmModal } from '../shared/ConfirmModal';
 import { FormField } from '../ui/FormField';
 import { Input } from '../ui/Input';
+import { DataTable } from '../shared/DataTable';
 
 const emptyForm = { value: '', label: '', sort_order: 0 };
+
+const COLUMNS = [
+  { key: 'value', header: 'Valeur', sortable: true, searchable: true },
+  { key: 'label', header: 'Libellé', sortable: true, searchable: true },
+  { key: 'sort_order', header: 'Ordre', sortable: true, className: 'text-right' },
+  { key: 'actions', header: 'Actions', className: 'w-32' },
+];
 
 export function TaxonomyList({ type, title }) {
   const { items, loading, fetchByType, create, update, remove } = useTaxonomyStore();
@@ -122,40 +130,30 @@ export function TaxonomyList({ type, title }) {
         <div className="flex justify-center py-8">
           <span className="loading loading-spinner loading-md" />
         </div>
-      ) : !taxonomies.length ? (
-        <p className="text-base-content/60 text-sm">Aucune entrée.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="table table-zebra table-sm">
-            <thead>
-              <tr>
-                <th>Valeur</th>
-                <th>Libellé</th>
-                <th className="text-right">Ordre</th>
-                <th className="w-32">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {taxonomies.map((item) => (
-                <tr key={item.id}>
-                  <td className="font-mono text-sm">{item.value}</td>
-                  <td>{item.label}</td>
-                  <td className="text-right">{item.sort_order}</td>
-                  <td>
-                    <div className="flex gap-1">
-                      <button className="btn btn-ghost btn-xs" onClick={() => startEdit(item)}>
-                        Modifier
-                      </button>
-                      <button className="btn btn-ghost btn-xs text-error" onClick={() => setDeleting(item)}>
-                        Supprimer
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          data={taxonomies}
+          columns={COLUMNS}
+          tableSizeClass="table-sm"
+          emptyState={<p className="text-base-content/60 text-sm">Aucune entrée.</p>}
+          renderCell={(item) => (
+            <tr key={item.id}>
+              <td className="font-mono text-sm">{item.value}</td>
+              <td>{item.label}</td>
+              <td className="text-right">{item.sort_order}</td>
+              <td>
+                <div className="flex gap-1">
+                  <button className="btn btn-ghost btn-xs" onClick={() => startEdit(item)}>
+                    Modifier
+                  </button>
+                  <button className="btn btn-ghost btn-xs text-error" onClick={() => setDeleting(item)}>
+                    Supprimer
+                  </button>
+                </div>
+              </td>
+            </tr>
+          )}
+        />
       )}
 
       <ConfirmModal

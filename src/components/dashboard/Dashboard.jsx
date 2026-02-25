@@ -5,6 +5,7 @@ import { useProfileStore } from '../../stores/useProfileStore';
 import { useProjectionStore } from '../../stores/useProjectionStore';
 import { useFixedCostStore } from '../../stores/useFixedCostStore';
 import { useConfigStore } from '../../stores/useConfigStore';
+import { useTeamCategoryStore } from '../../stores/useTeamCategoryStore';
 import { useCalculations } from '../../hooks/useCalculations';
 import { SynthesisTable } from './SynthesisTable';
 import { CostPieChart } from './CostPieChart';
@@ -22,6 +23,7 @@ export function Dashboard() {
   const fetchProjections = useProjectionStore((s) => s.fetchAll);
   const fetchFixedCosts = useFixedCostStore((s) => s.fetchAll);
   const fetchConfig = useConfigStore((s) => s.fetchConfig);
+  const fetchTeamCategories = useTeamCategoryStore((s) => s.fetchAll);
   const configLoading = useConfigStore((s) => s.loading);
 
   const [loaded, setLoaded] = useState(false);
@@ -30,8 +32,9 @@ export function Dashboard() {
     Promise.all([
       fetchRecipes(), fetchIngredients(), fetchProfiles(),
       fetchProjections(), fetchFixedCosts(), fetchConfig(),
+      fetchTeamCategories(),
     ]).then(() => setLoaded(true));
-  }, [fetchRecipes, fetchIngredients, fetchProfiles, fetchProjections, fetchFixedCosts, fetchConfig]);
+  }, [fetchRecipes, fetchIngredients, fetchProfiles, fetchProjections, fetchFixedCosts, fetchConfig, fetchTeamCategories]);
 
   const pessimistic = useCalculations('pessimistic');
   const realistic = useCalculations('realistic');

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRecipeStore } from '../../stores/useRecipeStore';
 import { useIngredientStore } from '../../stores/useIngredientStore';
 import { useTaxonomyStore } from '../../stores/useTaxonomyStore';
@@ -8,9 +8,20 @@ import { ConfirmModal } from '../shared/ConfirmModal';
 import { FormModal } from '../shared/FormModal';
 import { EmptyState } from '../shared/EmptyState';
 import { LoadingSpinner } from '../shared/LoadingSpinner';
+import { DataTable } from '../shared/DataTable';
 import { MarginBadge } from '../shared/MarginBadge';
 import { calcProductionCost, calcMargin } from '../../lib/calculations';
 import { RecipeCompositionImport } from './RecipeCompositionImport';
+
+const COLUMNS = [
+  { key: 'name', header: 'Nom', sortable: true, searchable: true },
+  { key: 'type', header: 'Type', sortable: true, searchable: true },
+  { key: 'selling_price', header: 'Prix vente', sortable: true, className: 'text-right' },
+  { key: 'cost', header: 'Coût prod.', sortable: true, className: 'text-right' },
+  { key: 'margin', header: 'Marge', sortable: true },
+  { key: 'unsold_rate', header: 'Invendus est.', className: 'text-right' },
+  { key: 'actions', header: 'Actions', className: 'w-32' },
+];
 
 export function RecipeList() {
   const { recipes, loading, fetchAll, remove } = useRecipeStore();
@@ -27,6 +38,22 @@ export function RecipeList() {
 
   const ingredientMap = {};
   ingredients.forEach((ing) => { ingredientMap[ing.id] = ing; });
+
+  const getSearchValue = useCallback((item, key) => {
+    if (key === 'name') return item.name || '';
+    if (key === 'type') return typeLabels[item.type] || item.type || '';
+    if (key === 'selling_price') return String(item.selling_price || 0);
+    if (key === 'cost') {
+      const ri = item.recipe_ingredients || [];
+      return String(calcProductionCost(ri, ingredientMap));
+    }
+    if (key === 'margin') {
+      const ri = item.recipe_ingredients || [];
+      const cost = calcProductionCost(ri, ingredientMap);
+      return String(calcMargin(item.selling_price, cost));
+    }
+    return item[key] == null ? '' : String(item[key]);
+  }, [typeLabels, ingredientMap]);
 
   const handleDelete = async () => {
     if (!deleting) return;
@@ -67,53 +94,40 @@ export function RecipeList() {
         />
       </FormModal>
 
-      {!recipes.length ? (
-        <EmptyState
-          title="Aucune recette"
-          description="Créez vos recettes pour calculer les marges."
-          actionLabel="Ajouter une recette"
-          onAction={() => setEditing('new')}
-        />
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="table table-zebra">
-            <thead>
-              <tr>
-                <th>Nom</th>
-                <th>Type</th>
-                <th className="text-right">Prix vente</th>
-                <th className="text-right">Coût prod.</th>
-                <th>Marge</th>
-                <th className="text-right">Invendus est.</th>
-                <th className="w-32">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recipes.map((recipe) => {
-                const ri = recipe.recipe_ingredients || [];
-                const cost = calcProductionCost(ri, ingredientMap);
-                const margin = calcMargin(recipe.selling_price, cost);
-                return (
-                  <tr key={recipe.id}>
-                    <td className="font-medium">{recipe.name}</td>
-                    <td><span className="badge badge-ghost badge-sm">{typeLabels[recipe.type] || recipe.type}</span></td>
-                    <td className="text-right font-mono">{Number(recipe.selling_price).toFixed(2)} CHF</td>
-                    <td className="text-right font-mono">{cost.toFixed(2)} CHF</td>
-                    <td><MarginBadge margin={margin} /></td>
-                    <td className="text-right">{recipe.unsold_rate_estimate}%</td>
-                    <td>
-                      <div className="flex gap-1">
-                        <button className="btn btn-ghost btn-xs" onClick={() => setEditing(recipe)}>Modifier</button>
-                        <button className="btn btn-ghost btn-xs text-error" onClick={() => setDeleting(recipe)}>Supprimer</button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <DataTable
+        data={recipes}
+        columns={COLUMNS}
+        getSearchValue={getSearchValue}
+        emptyState={
+          <EmptyState
+            title="Aucune recette"
+            description="Créez vos recettes pour calculer les marges."
+            actionLabel="Ajouter une recette"
+            onAction={() => setEditing('new')}
+          />
+        }
+        renderCell={(recipe) => {
+          const ri = recipe.recipe_ingredients || [];
+          const cost = calcProductionCost(ri, ingredientMap);
+          const margin = calcMargin(recipe.selling_price, cost);
+          return (
+            <tr key={recipe.id}>
+              <td className="font-medium">{recipe.name}</td>
+              <td><span className="badge badge-ghost badge-sm">{typeLabels[recipe.type] || recipe.type}</span></td>
+              <td className="text-right font-mono">{Number(recipe.selling_price).toFixed(2)} CHF</td>
+              <td className="text-right font-mono">{cost.toFixed(2)} CHF</td>
+              <td><MarginBadge margin={margin} /></td>
+              <td className="text-right">{recipe.unsold_rate_estimate}%</td>
+              <td>
+                <div className="flex gap-1">
+                  <button className="btn btn-ghost btn-xs" onClick={() => setEditing(recipe)}>Modifier</button>
+                  <button className="btn btn-ghost btn-xs text-error" onClick={() => setDeleting(recipe)}>Supprimer</button>
+                </div>
+              </td>
+            </tr>
+          );
+        }}
+      />
 
       <ConfirmModal
         open={!!deleting}
