@@ -30,6 +30,21 @@ function SubRow({ label, pVal, rVal, oVal, unit = 'chf' }) {
   );
 }
 
+function CategoryDetailRow({ label, pCat, rCat, oCat }) {
+  const formula = (c) => {
+    if (!c || !c.rate) return fmt(0);
+    return `${fmtN(c.rate, 1)} × ${fmt(c.price)} = ${fmt(c.subtotal)}`;
+  };
+  return (
+    <tr className="bg-base-200/30">
+      <td className="text-xs pl-12 py-1 text-base-content/70">{label}</td>
+      <td className="text-right font-mono text-xs py-1 text-base-content/70">{formula(pCat)}</td>
+      <td className="text-right font-mono text-xs py-1 text-base-content/70">{formula(rCat)}</td>
+      <td className="text-right font-mono text-xs py-1 text-base-content/70">{formula(oCat)}</td>
+    </tr>
+  );
+}
+
 function ProfileRevenueDetail({ scenarios, detailKey, categoryLabels }) {
   const get = (s) => s.details?.[detailKey];
   const p = get(scenarios.pessimistic);
@@ -55,19 +70,15 @@ function ProfileRevenueDetail({ scenarios, detailKey, categoryLabels }) {
         pVal={p?.variationPct} rVal={r?.variationPct} oVal={o?.variationPct}
         unit="%"
       />
-      {[...allCats].map((cat) => {
-        const rc = findCat(r, cat);
-        const label = `${categoryLabels[cat] || cat} (${fmtN(rc?.rate || 0, 1)}/pers. × ${fmt(rc?.price)})`;
-        return (
-          <SubRow
-            key={cat}
-            label={label}
-            pVal={findCat(p, cat)?.subtotal || 0}
-            rVal={rc?.subtotal || 0}
-            oVal={findCat(o, cat)?.subtotal || 0}
-          />
-        );
-      })}
+      {[...allCats].map((cat) => (
+        <CategoryDetailRow
+          key={cat}
+          label={`${categoryLabels[cat] || cat} (/pers.×prix)`}
+          pCat={findCat(p, cat)}
+          rCat={findCat(r, cat)}
+          oCat={findCat(o, cat)}
+        />
+      ))}
     </>
   );
 }
