@@ -91,17 +91,21 @@ export function useCalculations(scenario = 'realistic') {
       const data = headcountMap[profileId] || { count: 0, variationPct: 0 };
       const factor = 1 + (data.variationPct / 100);
       const rates = ratesForScenario.filter((cr) => cr.profile_id === profileId);
+      const qty = (cr) => data.count * cr.rate_per_person * factor;
       const categories = rates.map((cr) => ({
         category: cr.recipe_category,
         rate: cr.rate_per_person,
         price: recipePriceMap[cr.recipe_category] || 0,
-        subtotal: data.count * cr.rate_per_person * factor * (recipePriceMap[cr.recipe_category] || 0),
+        unitCost: recipeProductionCostMap[cr.recipe_category] || 0,
+        subtotal: qty(cr) * (recipePriceMap[cr.recipe_category] || 0),
+        productionCost: qty(cr) * (recipeProductionCostMap[cr.recipe_category] || 0),
       })).filter((c) => c.rate > 0);
       return {
         headcount: data.count,
         variationPct: data.variationPct,
         categories,
         total: categories.reduce((s, c) => s + c.subtotal, 0),
+        totalProductionCost: categories.reduce((s, c) => s + c.productionCost, 0),
       };
     };
 
@@ -123,12 +127,11 @@ export function useCalculations(scenario = 'realistic') {
       : { headcount: 0, variationPct: 0, categories: [], total: 0 };
     const revenuesArbitres = arbitreDetail.total;
 
-    // Cout de production des portions vendues
+    // Cout de production des portions vendues (somme par categorie, pas par marge moyenne)
     const totalSoldRevenue = revenuesVisitors + revenuesPompiers + revenuesArbitres;
-    const avgMarginPct = recipeDetails.length
-      ? recipeDetails.reduce((s, r) => s + (r.margin?.percentage || 0), 0) / recipeDetails.length / 100
-      : 0;
-    const productionCostsSold = totalSoldRevenue * (1 - avgMarginPct);
+    const productionCostsSold = visitorDetail.totalProductionCost
+      + pompierDetail.totalProductionCost
+      + arbitreDetail.totalProductionCost;
 
     // Invendus (detail par recette)
     const unsoldDetails = recipeDetails.map((recipe) => {
@@ -229,7 +232,14 @@ export function useCalculations(scenario = 'realistic') {
           variPct: scenarioShifts.consumption_variation_pct || 0,
         },
         fixedCostsList: fixedCosts.map((fc) => ({ name: fc.name, category: fc.category, amount: Number(fc.amount || 0) })),
-        productionCost: { totalSoldRevenue, avgMarginPct: avgMarginPct * 100 },
+        productionCost: {
+          totalSoldRevenue,
+          perProfile: [
+            { label: 'Visiteurs', revenue: revenuesVisitors, cost: visitorDetail.totalProductionCost, categories: visitorDetail.categories },
+            { label: 'Pompiers', revenue: revenuesPompiers, cost: pompierDetail.totalProductionCost, categories: pompierDetail.categories },
+            { label: 'Arbitres', revenue: revenuesArbitres, cost: arbitreDetail.totalProductionCost, categories: arbitreDetail.categories },
+          ],
+        },
         unsoldDetails,
       },
       cotisationResult,

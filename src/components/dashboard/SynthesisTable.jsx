@@ -172,12 +172,39 @@ function FixedCostsDetail({ scenarios }) {
   ));
 }
 
-function ProductionCostDetail({ scenarios }) {
+function ProductionCostDetail({ scenarios, categoryLabels }) {
   const get = (s) => s.details?.productionCost;
   const p = get(scenarios.pessimistic);
   const r = get(scenarios.realistic);
   const o = get(scenarios.optimistic);
   if (!r) return null;
+
+  // Collect all categories across all profiles and scenarios
+  const allCats = new Set();
+  [p, r, o].forEach((d) => {
+    d?.perProfile?.forEach((prof) => {
+      prof.categories?.forEach((c) => allCats.add(c.category));
+    });
+  });
+
+  // Sum production cost per category across all profiles for a given scenario
+  const catCost = (d, cat) => {
+    if (!d?.perProfile) return 0;
+    return d.perProfile.reduce((s, prof) => {
+      const c = prof.categories?.find((x) => x.category === cat);
+      return s + (c?.productionCost || 0);
+    }, 0);
+  };
+
+  // Sum qty (headcount × rate × factor) per category across all profiles
+  const catQty = (d, cat) => {
+    if (!d?.perProfile) return 0;
+    return d.perProfile.reduce((s, prof) => {
+      const c = prof.categories?.find((x) => x.category === cat);
+      if (!c || !c.unitCost) return s;
+      return s + (c.productionCost / c.unitCost);
+    }, 0);
+  };
 
   return (
     <>
@@ -185,12 +212,19 @@ function ProductionCostDetail({ scenarios }) {
         label="Chiffre d'affaires total (ventes)"
         pVal={p?.totalSoldRevenue} rVal={r.totalSoldRevenue} oVal={o?.totalSoldRevenue}
       />
-      <SubRow
-        label={`Marge moyenne: ${fmtN(r.avgMarginPct, 1)}% → coût = CA × ${fmtN(100 - r.avgMarginPct, 1)}%`}
-        pVal={p?.totalSoldRevenue * (1 - (p?.avgMarginPct || 0) / 100)}
-        rVal={r.totalSoldRevenue * (1 - r.avgMarginPct / 100)}
-        oVal={o?.totalSoldRevenue * (1 - (o?.avgMarginPct || 0) / 100)}
-      />
+      {[...allCats].map((cat) => {
+        const rQty = catQty(r, cat);
+        const rCost = r.perProfile?.[0]?.categories?.find((c) => c.category === cat)?.unitCost || 0;
+        return (
+          <SubRow
+            key={cat}
+            label={`${categoryLabels[cat] || cat} (${fmtN(rQty, 1)} portions × ${fmt(rCost)}/u)`}
+            pVal={catCost(p, cat)}
+            rVal={catCost(r, cat)}
+            oVal={catCost(o, cat)}
+          />
+        );
+      })}
     </>
   );
 }
@@ -299,7 +333,7 @@ export function SynthesisTable({ scenarios }) {
               {expanded.cotMeals && <CotisationMealsDetail scenarios={scenarios} />}
 
               {mainRow('prodCosts', 'Coûts de production (vendus)', (s) => s.scenarioResult?.productionCostsSold, { expandable: true })}
-              {expanded.prodCosts && <ProductionCostDetail scenarios={scenarios} />}
+              {expanded.prodCosts && <ProductionCostDetail scenarios={scenarios} categoryLabels={categoryLabels} />}
 
               {mainRow('fixedCosts', 'Coûts fixes', (s) => s.scenarioResult?.fixedCosts, { expandable: true })}
               {expanded.fixedCosts && <FixedCostsDetail scenarios={scenarios} />}
