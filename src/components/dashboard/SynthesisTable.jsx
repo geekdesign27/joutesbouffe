@@ -98,6 +98,17 @@ function CotisationRevenueDetail({ scenarios }) {
   });
 }
 
+function FormulaRow({ label, pFormula, rFormula, oFormula }) {
+  return (
+    <tr className="bg-base-200/30">
+      <td className="text-xs pl-12 py-1 text-base-content/70">{label}</td>
+      <td className="text-right font-mono text-xs py-1 text-base-content/70">{pFormula}</td>
+      <td className="text-right font-mono text-xs py-1 text-base-content/70">{rFormula}</td>
+      <td className="text-right font-mono text-xs py-1 text-base-content/70">{oFormula}</td>
+    </tr>
+  );
+}
+
 function CotisationDrinksDetail({ scenarios }) {
   const get = (s) => s.details?.cotisationCategories;
   const r = get(scenarios.realistic) || [];
@@ -105,12 +116,20 @@ function CotisationDrinksDetail({ scenarios }) {
   const o = get(scenarios.optimistic) || [];
   if (!r.length) return null;
 
+  const formula = (cat) => {
+    if (!cat || !cat.drinkCost) return fmt(0);
+    return `${fmtN(cat.numTeams)} éq. × ${fmtN(cat.drinkQtyPerTeam)} × ${fmt(cat.drinkCostPerUnit)} = ${fmt(cat.drinkCost)}`;
+  };
+
   return r.filter((c) => c.drinkCost > 0).map((cat, i) => {
-    const label = `${cat.name} (${fmtN(cat.numTeams)} éq. × ${fmtN(cat.drinkQtyPerTeam)} ${cat.drinkRecipeName || 'boisson'} × ${fmt(cat.drinkCostPerUnit)})`;
     const pi = p.find((c) => c.name === cat.name);
     const oi = o.find((c) => c.name === cat.name);
     return (
-      <SubRow key={i} label={label} pVal={pi?.drinkCost || 0} rVal={cat.drinkCost} oVal={oi?.drinkCost || 0} />
+      <FormulaRow
+        key={i}
+        label={`${cat.name} (${cat.drinkRecipeName || 'boisson'})`}
+        pFormula={formula(pi)} rFormula={formula(cat)} oFormula={formula(oi)}
+      />
     );
   });
 }
@@ -122,12 +141,20 @@ function CotisationMealsDetail({ scenarios }) {
   const o = get(scenarios.optimistic) || [];
   if (!r.length) return null;
 
+  const formula = (cat) => {
+    if (!cat || !cat.mealCost) return fmt(0);
+    return `${fmtN(cat.players)} × ${fmtN(cat.mealsPerPlayer)} × ${fmt(cat.mealCostPerUnit)} = ${fmt(cat.mealCost)}`;
+  };
+
   return r.filter((c) => c.mealCost > 0).map((cat, i) => {
-    const label = `${cat.name} (${fmtN(cat.players)} pers. × ${fmtN(cat.mealsPerPlayer)} ${cat.mealRecipeName || 'repas'} × ${fmt(cat.mealCostPerUnit)})`;
     const pi = p.find((c) => c.name === cat.name);
     const oi = o.find((c) => c.name === cat.name);
     return (
-      <SubRow key={i} label={label} pVal={pi?.mealCost || 0} rVal={cat.mealCost} oVal={oi?.mealCost || 0} />
+      <FormulaRow
+        key={i}
+        label={`${cat.name} (${cat.mealRecipeName || 'repas'})`}
+        pFormula={formula(pi)} rFormula={formula(cat)} oFormula={formula(oi)}
+      />
     );
   });
 }
@@ -139,24 +166,34 @@ function VolunteerDetail({ scenarios }) {
   const o = get(scenarios.optimistic);
   if (!r) return null;
 
+  const hoursFormula = (v) => {
+    if (!v) return '0 h';
+    return `${fmtN(v.n1)}×1 + ${fmtN(v.n2)}×2 + ${fmtN(v.n3)}×3 = ${fmtN(v.totalHours)} h`;
+  };
+
+  const mealFormula = (v) => {
+    if (!v) return fmt(0);
+    return `${fmtN(v.meals)} × ${fmt(v.avgMealCost)} = ${fmt(v.meals * v.avgMealCost)}`;
+  };
+
+  const drinkFormula = (v) => {
+    if (!v) return fmt(0);
+    return `${fmtN(v.drinks)} × ${fmt(v.avgDrinkCost)} = ${fmt(v.drinks * v.avgDrinkCost)}`;
+  };
+
   return (
     <>
-      <SubRow
-        label={`Bénévoles (${fmtN(r.n1)}×1 + ${fmtN(r.n2)}×2 + ${fmtN(r.n3)}×3 shifts)`}
-        pVal={p?.totalHours} rVal={r.totalHours} oVal={o?.totalHours}
-        unit="h"
+      <FormulaRow
+        label="Heures bénévoles (n×shifts)"
+        pFormula={hoursFormula(p)} rFormula={hoursFormula(r)} oFormula={hoursFormula(o)}
       />
-      <SubRow
-        label={`Repas dus (${fmtN(r.meals)} × ${fmt(r.avgMealCost)})`}
-        pVal={(p?.meals || 0) * (p?.avgMealCost || 0)}
-        rVal={r.meals * r.avgMealCost}
-        oVal={(o?.meals || 0) * (o?.avgMealCost || 0)}
+      <FormulaRow
+        label="Repas dus (nb × coût moyen)"
+        pFormula={mealFormula(p)} rFormula={mealFormula(r)} oFormula={mealFormula(o)}
       />
-      <SubRow
-        label={`Boissons dues (${fmtN(r.drinks)} × ${fmt(r.avgDrinkCost)})`}
-        pVal={(p?.drinks || 0) * (p?.avgDrinkCost || 0)}
-        rVal={r.drinks * r.avgDrinkCost}
-        oVal={(o?.drinks || 0) * (o?.avgDrinkCost || 0)}
+      <FormulaRow
+        label="Boissons dues (nb × coût moyen)"
+        pFormula={drinkFormula(p)} rFormula={drinkFormula(r)} oFormula={drinkFormula(o)}
       />
     </>
   );
